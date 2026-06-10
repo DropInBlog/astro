@@ -1,6 +1,6 @@
 {
   "name": "@dropinblog/astro",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "DropInBlog rendered content for Astro projects.",
   "homepage": "https://github.com/DropInBlog/astro#readme",
   "bugs": {
