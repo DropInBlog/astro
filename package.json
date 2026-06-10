@@ -20,6 +20,9 @@
   "license": "MIT",
   "author": "DropInBlog",
   "type": "module",
+  "publishConfig": {
+    "access": "public"
+  },
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
