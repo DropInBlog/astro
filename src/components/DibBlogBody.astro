@@ -1,0 +1,18 @@
+---
+// Static body renderer — the ssg/ssr counterpart of DibBlogBodyIsland.
+// Routes import whichever variant the resolved mode selects via the
+// virtual:dropinblog/body module; kind/slug/page exist so both variants
+// share one props contract.
+import DibBlogContent from './DibBlogContent.astro';
+import type { RenderedKind } from '@dropinblog/astro/runtime';
+
+interface Props {
+  kind: RenderedKind;
+  slug?: string;
+  page?: number;
+  body_html?: string;
+}
+
+const { body_html } = Astro.props;
+---
+<DibBlogContent body_html={body_html} />

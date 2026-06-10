@@ -1,0 +1,23 @@
+---
+import config from 'virtual:dropinblog/config';
+import Layout from 'virtual:dropinblog/layout';
+import DibBlogHead from '@dropinblog/astro/components/DibBlogHead.astro';
+import DibBlogBody from 'virtual:dropinblog/body';
+import { indexCacheKey, isNotFound, loadList } from '@dropinblog/astro/runtime';
+
+const cacheKey = await indexCacheKey(config);
+
+let data;
+try {
+  data = await loadList(config, 1, cacheKey);
+} catch (error) {
+  if (isNotFound(error)) {
+    return new Response(null, { status: 404 });
+  }
+  throw error;
+}
+---
+<Layout title={data.head_data?.title}>
+  <DibBlogHead slot="head" head_data={data.head_data} />
+  <DibBlogBody kind="list" page={1} body_html={data.body_html} />
+</Layout>

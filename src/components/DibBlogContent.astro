@@ -1,0 +1,10 @@
+---
+interface Props {
+  body_html?: string;
+}
+
+const { body_html } = Astro.props;
+// body_html is emitted verbatim: it can contain <pre> blocks, inline scripts,
+// and user snippets where newlines are significant.
+---
+{body_html && <Fragment set:html={body_html} />}
