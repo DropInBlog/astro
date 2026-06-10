@@ -2,13 +2,13 @@
   "name": "@dropinblog/astro",
   "version": "0.1.0",
   "description": "DropInBlog rendered content for Astro projects.",
-  "homepage": "https://github.com/DropInBlog/astro-rendered#readme",
+  "homepage": "https://github.com/DropInBlog/astro#readme",
   "bugs": {
-    "url": "https://github.com/DropInBlog/astro-rendered/issues"
+    "url": "https://github.com/DropInBlog/astro/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/DropInBlog/astro-rendered.git"
+    "url": "git+https://github.com/DropInBlog/astro.git"
   },
   "keywords": [
     "astro",
