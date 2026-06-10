@@ -1,0 +1,75 @@
+---
+interface HeadDataProp {
+  title?: string;
+  description?: string;
+  canonical_url?: string;
+  image?: string;
+  rss_url?: string;
+  seo_url_next?: string;
+  seo_url_prev?: string;
+  css?: string;
+  css_link?: string;
+  schema?: string;
+  fonts?: string[];
+  js?: string;
+  js_search?: string;
+  noindex?: boolean;
+}
+
+interface Props {
+  head_data?: HeadDataProp;
+  // The layout owns <title>, so by default we don't emit it here. Pass
+  // includeTitle to opt in (e.g. for layout-less usage).
+  includeTitle?: boolean;
+  // og:type for the page — post routes pass 'article'.
+  ogType?: 'article' | 'website';
+}
+
+const { head_data, includeTitle = false, ogType = 'website' } = Astro.props;
+
+const stripNewlines = (value: string): string => value.replace(/\n/g, '');
+
+// head_data.schema arrives as one or more complete
+// <script type="application/ld+json"> tag strings (article + FAQ schema can
+// both be present); unwrap each so we emit clean script elements. Raw JSON
+// passes through untouched.
+const schemaJsonBlocks = (() => {
+  if (!head_data?.schema) return [];
+  const matches = [...head_data.schema.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/gi)];
+  if (matches.length === 0) {
+    return [stripNewlines(head_data.schema.trim())];
+  }
+  return matches.map((m) => stripNewlines((m[1] ?? '').trim())).filter((json) => json !== '');
+})();
+
+const fonts = head_data?.fonts ?? [];
+---
+{includeTitle && head_data?.title && <title set:html={head_data.title} />}
+{head_data?.description && <meta name="description" content={head_data.description} />}
+{head_data?.canonical_url && <link rel="canonical" href={head_data.canonical_url} />}
+{head_data?.noindex && <meta name="robots" content="noindex" />}
+
+{head_data?.title && <meta property="og:type" content={ogType} />}
+{head_data?.title && <meta property="og:title" content={head_data.title} />}
+{head_data?.description && <meta property="og:description" content={head_data.description} />}
+{head_data?.canonical_url && <meta property="og:url" content={head_data.canonical_url} />}
+{head_data?.image && <meta property="og:image" content={head_data.image} />}
+
+{head_data?.image && <meta name="twitter:card" content="summary_large_image" />}
+{head_data?.title && <meta name="twitter:title" content={head_data.title} />}
+{head_data?.description && <meta name="twitter:description" content={head_data.description} />}
+{head_data?.image && <meta name="twitter:image" content={head_data.image} />}
+
+{head_data?.rss_url && <link rel="alternate" type="application/rss+xml" href={head_data.rss_url} />}
+{head_data?.seo_url_prev && <link rel="prev" href={head_data.seo_url_prev} />}
+{head_data?.seo_url_next && <link rel="next" href={head_data.seo_url_next} />}
+
+{fonts.length > 0 && <link rel="preconnect" href="https://fonts.googleapis.com" />}
+{fonts.length > 0 && <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />}
+{fonts.map((font) => <link rel="stylesheet" href={font} />)}
+
+{head_data?.css && <style set:html={stripNewlines(head_data.css)} />}
+{schemaJsonBlocks.map((json) => <script type="application/ld+json" set:html={json} />)}
+
+{head_data?.js && <script is:inline async src={head_data.js}></script>}
+{head_data?.js_search && <script is:inline async type="module" src={head_data.js_search}></script>}

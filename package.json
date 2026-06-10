@@ -1,0 +1,68 @@
+{
+  "name": "@dropinblog/astro",
+  "version": "0.1.0",
+  "description": "DropInBlog rendered content for Astro projects.",
+  "homepage": "https://github.com/DropInBlog/astro-rendered#readme",
+  "bugs": {
+    "url": "https://github.com/DropInBlog/astro-rendered/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DropInBlog/astro-rendered.git"
+  },
+  "keywords": [
+    "astro",
+    "astro-integration",
+    "dropinblog",
+    "blog",
+    "cms"
+  ],
+  "license": "MIT",
+  "author": "DropInBlog",
+  "type": "module",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./runtime": {
+      "types": "./dist/lib/runtime.d.ts",
+      "import": "./dist/lib/runtime.js"
+    },
+    "./client": {
+      "types": "./dist/lib/client.d.ts",
+      "import": "./dist/lib/client.js"
+    },
+    "./components/*.astro": "./src/components/*.astro",
+    "./routes/*.astro": "./src/routes/*.astro",
+    "./routes/*.ts": "./dist/routes/*.js",
+    "./virtual.d.ts": "./src/virtual.d.ts",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "src/components",
+    "src/routes/*.astro",
+    "src/virtual.d.ts"
+  ],
+  "peerDependencies": {
+    "astro": "^5.0.0 || ^6.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.8.0",
+    "astro": "^5.0.0",
+    "typescript": "^5.6.0",
+    "vite": "^6.0.0",
+    "vitest": "^3.0.0"
+  },
+  "engines": {
+    "node": ">=18.20.8"
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "dev": "tsc -b --watch",
+    "clean": "rm -rf dist",
+    "test": "vitest run"
+  }
+}

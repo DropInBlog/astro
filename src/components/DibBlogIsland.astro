@@ -1,0 +1,30 @@
+---
+import config from 'virtual:dropinblog/config';
+import DibBlogContent from './DibBlogContent.astro';
+import { fetchRendered, type RenderedKind } from '@dropinblog/astro/runtime';
+
+interface Props {
+  kind: RenderedKind;
+  slug?: string;
+  page?: number;
+}
+
+const { kind, slug, page = 1 } = Astro.props;
+
+// Runs at request time when rendered with server:defer — always fetches
+// fresh content, no disk cache (works on serverless/worker runtimes).
+// A failed fetch must not surface as a blank page, so render a retry
+// message instead of throwing.
+let data;
+let failed = false;
+try {
+  data = await fetchRendered(config, kind, slug, page);
+} catch (error) {
+  failed = true;
+  console.error('@dropinblog/astro: island fetch failed:', error);
+}
+---
+{failed
+  ? <p data-dib-error>This content is temporarily unavailable. Please refresh the page to try again.</p>
+  : <DibBlogContent body_html={data?.body_html} />}
+<slot />

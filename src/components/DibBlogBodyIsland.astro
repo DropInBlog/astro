@@ -1,0 +1,18 @@
+---
+// Island body renderer — selected by virtual:dropinblog/body in island mode.
+// The server:defer directive lives here, in a file that only enters the
+// module graph when island mode is active, so static builds never trip
+// Astro's adapter requirement for server islands.
+import DibBlogIsland from './DibBlogIsland.astro';
+import type { RenderedKind } from '@dropinblog/astro/runtime';
+
+interface Props {
+  kind: RenderedKind;
+  slug?: string;
+  page?: number;
+  body_html?: string;
+}
+
+const { kind, slug, page = 1 } = Astro.props;
+---
+<DibBlogIsland server:defer kind={kind} slug={slug} page={page} />
