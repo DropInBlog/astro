@@ -1,6 +1,6 @@
 {
   "name": "@dropinblog/astro",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "DropInBlog rendered content for Astro projects.",
   "homepage": "https://github.com/DropInBlog/astro#readme",
   "bugs": {
@@ -11,11 +11,14 @@
     "url": "git+https://github.com/DropInBlog/astro.git"
   },
   "keywords": [
-    "astro",
     "astro-integration",
+    "astro-component",
+    "withastro",
     "dropinblog",
     "blog",
-    "cms"
+    "cms",
+    "seo",
+    "performance"
   ],
   "license": "MIT",
   "author": "DropInBlog",
