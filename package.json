@@ -1,7 +1,7 @@
 {
   "name": "@dropinblog/astro",
-  "version": "1.0.1",
-  "description": "DropInBlog rendered content for Astro projects.",
+  "version": "1.0.2",
+  "description": "SEO-first blogging for Astro: server-rendered posts, meta tags, sitemap, and RSS feeds",
   "homepage": "https://github.com/DropInBlog/astro#readme",
   "bugs": {
     "url": "https://github.com/DropInBlog/astro/issues"
