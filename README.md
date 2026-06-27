@@ -10,7 +10,7 @@ Astro integration for [DropInBlog](https://dropinblog.com/) with static (SSG), s
 - SEO-optimized: meta tags, Open Graph, Twitter cards, and JSON-LD on every page
 - RSS feeds and XML sitemap included
 - Bring your own layout component
-- Works with Astro 5 and 6
+- Works with Astro 6 and 7
 
 ## Installation
 
