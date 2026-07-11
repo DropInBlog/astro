@@ -1,11 +1,13 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { RenderedApiClient } from '../src/lib/client.js';
+import { PACKAGE_VERSION } from '../src/lib/version.js';
 
 const baseOpts = {
   apiBaseUrl: 'https://api.example.com/v2',
   apiToken: 'test-token',
   blogId: 'blog-1',
   fields: ['head_data', 'body_html'],
+  mode: 'ssr' as const,
 };
 
 function mockFetch(payload: unknown, init: { ok?: boolean; status?: number } = {}) {
@@ -32,6 +34,7 @@ describe('RenderedApiClient', () => {
     const [url, init] = fn.mock.calls[0] as unknown as [string, RequestInit];
     expect(url).toBe('https://api.example.com/v2/blog/blog-1/rendered/post/my-post?fields=head_data%2Cbody_html');
     expect((init.headers as Record<string, string>).Authorization).toBe('Bearer test-token');
+    expect((init.headers as Record<string, string>)['X-Dib-Package']).toBe(`astro@${PACKAGE_VERSION}+ssr`);
   });
 
   it('adds the page param to list calls', async () => {

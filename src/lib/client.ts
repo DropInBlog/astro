@@ -5,6 +5,7 @@ import type {
   SitemapResponse,
   VirtualConfig,
 } from './types.js';
+import { PACKAGE_VERSION } from './version.js';
 
 interface ApiEnvelope<T> {
   success: boolean;
@@ -36,7 +37,7 @@ export function isNotFound(error: unknown): boolean {
 }
 
 export class RenderedApiClient {
-  constructor(private readonly opts: Pick<VirtualConfig, 'apiBaseUrl' | 'apiToken' | 'blogId' | 'fields'>) {}
+  constructor(private readonly opts: Pick<VirtualConfig, 'apiBaseUrl' | 'apiToken' | 'blogId' | 'fields' | 'mode'>) {}
 
   private url(path: string, params: Record<string, string | number | undefined> = {}, fieldsOverride?: string): string {
     const url = new URL(`${this.opts.apiBaseUrl}/blog/${this.opts.blogId}/rendered${path}`);
@@ -68,7 +69,10 @@ export class RenderedApiClient {
     for (let attempt = 1; attempt <= attempts; attempt += 1) {
       try {
         const res = await fetch(url, {
-          headers: { Authorization: `Bearer ${this.opts.apiToken}` },
+          headers: {
+            Authorization: `Bearer ${this.opts.apiToken}`,
+            'X-Dib-Package': `astro@${PACKAGE_VERSION}+${this.opts.mode}`,
+          },
           signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
         });
         if (!res.ok) {
