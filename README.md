@@ -29,7 +29,7 @@ DROPINBLOG_BLOG_ID=your_dropinblog_blog_id
 DROPINBLOG_API_TOKEN=your_dropinblog_api_token
 ```
 
-> Use your **public** API token — it is read-only and safe in build environments.
+> Use your **public** API token. It is read-only and safe in build environments.
 
 ### 2. Add the Integration
 
@@ -46,17 +46,17 @@ export default defineConfig({
 
 Routes registered by the integration:
 
-- `/blog` – Main blog list
-- `/blog/page/{page}` – Paginated blog list
-- `/blog/category/{slug}` – Category pages
-- `/blog/category/{slug}/page/{page}` – Paginated category pages
-- `/blog/author/{slug}` – Author pages
-- `/blog/author/{slug}/page/{page}` – Paginated author pages
-- `/blog/{slug}` – Single post pages
-- `/blog/sitemap.xml` – Sitemap
-- `/blog/feed` – RSS feed
-- `/blog/category/{slug}/feed` – Category RSS feeds
-- `/blog/author/{slug}/feed` – Author RSS feeds
+- `/blog` - Main blog list
+- `/blog/page/{page}` - Paginated blog list
+- `/blog/category/{slug}` - Category pages
+- `/blog/category/{slug}/page/{page}` - Paginated category pages
+- `/blog/author/{slug}` - Author pages
+- `/blog/author/{slug}/page/{page}` - Paginated author pages
+- `/blog/{slug}` - Single post pages
+- `/blog/sitemap.xml` - Sitemap
+- `/blog/feed` - RSS feed
+- `/blog/category/{slug}/feed` - Category RSS feeds
+- `/blog/author/{slug}/feed` - Author RSS feeds
 
 To mount the blog at a different path (e.g. `/news`), pass `basePath`:
 
@@ -92,7 +92,7 @@ const { title } = Astro.props;
 </html>
 ```
 
-Without `<slot name="head" />`, Astro silently drops the head content — meta tags will be missing from your pages.
+Without `<slot name="head" />`, Astro silently drops the head content and meta tags will be missing from your pages.
 
 ## Options
 
@@ -104,6 +104,29 @@ Without `<slot name="head" />`, Astro silently drops the head content — meta t
 | `mode` | `'auto'` | `'auto'`, `'ssg'`, `'ssr'`, or `'island'` |
 | `layout` | built-in minimal layout | Path to your Astro layout component |
 | `cacheTtlMs` | `300000` (5 min) | Build-cache TTL used when per-post freshness data is unavailable |
+
+## Build Hook URL
+
+DropInBlog can notify your site whenever your blog changes. In your DropInBlog dashboard, go to Settings and set the Build Hook URL to any endpoint you choose. DropInBlog sends an HTTP POST request to that URL every time blog content or design changes, including when:
+
+* A post is published, updated, or deleted
+* A category or author is added, updated, or deleted
+* Layout or design settings are saved
+
+Post events include a JSON body with the `postId` and `slug` of the affected post; other events send an empty payload.
+
+With Astro's default static (`ssg`) mode this is the recommended setup: paste the deploy hook URL from your hosting provider (Vercel, Netlify, Cloudflare, etc.) and every blog change triggers a fresh build, so your published site is never stale. Rebuilds are fast because the build cache skips posts that haven't changed.
+
+In `island` mode, post bodies are fetched on each request, but new posts, SEO tags, and list pages still come from the last build, so a build hook is still recommended. In `ssr` mode every page is rendered per request and you typically don't need it; set one only if you want a webhook for your own automation whenever blog content changes.
+
+## Previewing Posts with Private Visibility
+
+To preview a post before making it public, publish it with **Private** visibility in DropInBlog, then rebuild your site. The post is built at its normal URL (`/blog/{slug}`) so you can view and share it by link, but it stays hidden everywhere else:
+
+- It never appears in blog lists, category/author pages, the sitemap, or RSS feeds.
+- The page carries `<meta name="robots" content="noindex">` so search engines won't index it.
+
+Switch the post to Public visibility and rebuild to launch it. Note that "private" means **unlisted, not access-controlled**: anyone with the link can view the page. On static (SSG) builds, content edits require a rebuild to show up.
 
 ## License
 

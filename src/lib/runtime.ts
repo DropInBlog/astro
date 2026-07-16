@@ -14,7 +14,7 @@ const isDevServer = (): boolean => {
 
 interface PostPath {
   params: { slug: string };
-  props: { cacheKey: string };
+  props: { cacheKey: string; noindex?: boolean };
 }
 
 interface PagePath {
@@ -68,12 +68,19 @@ function maybeIndex(config: VirtualConfig): Promise<IndexResponse | null> {
 const MAX_WALK_PAGES = 200;
 const WALK_LIMIT = 100;
 
-function isPublishedPublic(p: { status?: string; visibility?: string }): boolean {
-  // API documentation shows uppercase values (PUBLISHED/PUBLIC); compare
-  // case-insensitively so a serializer change can never blank the blog.
+// API documentation shows uppercase values (PUBLISHED/PUBLIC); compare
+// case-insensitively so a serializer change can never blank the blog.
+function isPublishedVisible(p: { status?: string; visibility?: string }): boolean {
   if (p.status && p.status.toLowerCase() !== 'published') return false;
-  if (p.visibility && p.visibility.toLowerCase() !== 'public') return false;
+  if (p.visibility) {
+    const visibility = p.visibility.toLowerCase();
+    if (visibility !== 'public' && visibility !== 'private') return false;
+  }
   return true;
+}
+
+function isPublic(p: { visibility?: string }): boolean {
+  return !p.visibility || p.visibility.toLowerCase() === 'public';
 }
 
 // Build the SSG slug index by paginating /posts. Returns null if the call
@@ -95,11 +102,15 @@ async function buildIndex(client: RenderedApiClient): Promise<IndexResponse | nu
     while (page <= MAX_WALK_PAGES) {
       const { posts, pagination } = await client.fetchPosts(page, WALK_LIMIT);
       for (const p of posts) {
-        if (!isPublishedPublic(p) || !p.slug) continue;
+        if (!isPublishedVisible(p) || !p.slug) continue;
         entries.push({
           slug: p.slug,
           updated_at: p.updatedAt ?? p.modifiedAt ?? p.publishedAt ?? '',
+          visibility: p.visibility,
         });
+        // Rendered category/author lists exclude private posts, so only
+        // public posts count toward the derived pagination bounds.
+        if (!isPublic(p)) continue;
         for (const cat of p.categories ?? []) {
           if (cat?.slug) categoryCounts.set(cat.slug, (categoryCounts.get(cat.slug) ?? 0) + 1);
         }
@@ -269,7 +280,11 @@ export async function postStaticPaths(config: VirtualConfig): Promise<PostPath[]
   }
   return index.entries.map((entry: IndexEntry) => ({
     params: { slug: entry.slug },
-    props: { cacheKey: entry.updated_at },
+    props: {
+      cacheKey: entry.updated_at,
+      // Private posts are reachable at their slug but should never be indexed.
+      ...(isPublic(entry) ? {} : { noindex: true }),
+    },
   }));
 }
 

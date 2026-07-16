@@ -42,6 +42,7 @@ export interface FeedResponse {
 export interface IndexEntry {
   slug: string;
   updated_at: string;
+  visibility?: string;
 }
 
 export interface IndexResponse {

@@ -163,7 +163,10 @@ export class RenderedApiClient {
       page,
       limit,
       statuses: 'published',
-      visibilities: 'public',
+      // Private posts are unlisted-but-viewable by design: they get a static
+      // page at their slug (noindexed) but never appear in rendered lists,
+      // sitemaps, or feeds.
+      visibilities: 'public,private',
     }));
   }
 }

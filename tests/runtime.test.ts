@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import {
   authorPageStaticPaths,
+  authorStaticPaths,
   categoryPageStaticPaths,
   categoryStaticPaths,
   indexCacheKey,
@@ -48,7 +49,8 @@ function makeConfig(mode: 'ssg' | 'ssr' = 'ssg'): VirtualConfig {
 
 // 25 published posts: all by author jane, all in category news, the first 12
 // also in category tips. Status/visibility intentionally UPPERCASE to verify
-// case-insensitive filtering. One draft that must be excluded.
+// case-insensitive filtering. One draft that must be excluded, and one
+// private post that gets a page but stays out of list/category/author counts.
 function makePosts() {
   const posts = Array.from({ length: 25 }, (_, i) => ({
     slug: `post-${i + 1}`,
@@ -66,11 +68,20 @@ function makePosts() {
     categories: [{ slug: 'news' }],
     author: { slug: 'jane' },
   });
+  posts.push({
+    slug: 'private-post',
+    status: 'PUBLISHED',
+    visibility: 'PRIVATE',
+    updatedAt: '2026-02-02T00:00:00Z',
+    categories: [{ slug: 'news' }, { slug: 'secret' }],
+    author: { slug: 'ghost' },
+  });
   return posts;
 }
 
-// Derived bounds with these posts at per_page=10: list 3 pages (26 rows incl.
-// draft), news 3, tips 2, jane 3. `actual` overrides simulate the rendered
+// Derived bounds with these posts at per_page=10: list 3 pages (27 rows incl.
+// draft + private), news 3, tips 2, jane 3 (public posts only count toward
+// category/author bounds). `actual` overrides simulate the rendered
 // endpoints having FEWER pages than derived (hero post, hidden categories).
 interface StubOptions {
   actualListPages?: number;
@@ -139,12 +150,35 @@ describe('static path derivation', () => {
   it('enumerates published posts and skips drafts (case-insensitive)', async () => {
     stubApi();
     const paths = await postStaticPaths(makeConfig());
-    expect(paths).toHaveLength(25);
+    expect(paths).toHaveLength(26);
     expect(paths[0]).toEqual({
       params: { slug: 'post-1' },
       props: { cacheKey: '2026-01-01T00:00:00Z' },
     });
     expect(paths.some((p) => p.params.slug === 'draft-post')).toBe(false);
+  });
+
+  it('includes private posts with a noindex prop', async () => {
+    stubApi();
+    const paths = await postStaticPaths(makeConfig());
+    const privatePost = paths.find((p) => p.params.slug === 'private-post');
+    expect(privatePost).toEqual({
+      params: { slug: 'private-post' },
+      props: { cacheKey: '2026-02-02T00:00:00Z', noindex: true },
+    });
+    // Public posts must not carry the noindex prop.
+    expect(paths.filter((p) => 'noindex' in p.props)).toEqual([privatePost]);
+  });
+
+  it('excludes private posts from category and author page derivation', async () => {
+    // The rendered category/author lists omit private posts, so a category or
+    // author containing only private posts must not get a static page.
+    stubApi({ actualCategoryPages: { news: 3, tips: 2 } });
+    const config = makeConfig();
+    const categories = await categoryStaticPaths(config);
+    expect(categories.some((c) => c.params.slug === 'secret')).toBe(false);
+    const authors = await authorStaticPaths(config);
+    expect(authors.some((a) => a.params.slug === 'ghost')).toBe(false);
   });
 
   it('derives list pagination from the probe when rendered pages agree', async () => {
@@ -208,7 +242,7 @@ describe('static path derivation', () => {
     await postStaticPaths(makeConfig());
     const url = String(fn.mock.calls[0]?.[0]);
     expect(url).toContain('statuses=published');
-    expect(url).toContain('visibilities=public');
+    expect(url).toContain('visibilities=public%2Cprivate');
   });
 
   it('indexCacheKey returns a signature in ssg and undefined in ssr', async () => {

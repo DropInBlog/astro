@@ -8,7 +8,7 @@ import { isNotFound, loadPost } from '@dropinblog/astro/runtime';
 export * from 'virtual:dropinblog/paths/post';
 
 const slug = String(Astro.params.slug);
-const cacheKey = (Astro.props as { cacheKey?: string }).cacheKey;
+const { cacheKey, noindex } = Astro.props as { cacheKey?: string; noindex?: boolean };
 
 let data;
 try {
@@ -19,8 +19,10 @@ try {
   }
   throw error;
 }
+
+const head_data = noindex ? { ...data.head_data, noindex: true } : data.head_data;
 ---
 <Layout title={data.head_data?.title}>
-  <DibBlogHead slot="head" head_data={data.head_data} ogType="article" />
+  <DibBlogHead slot="head" head_data={head_data} ogType="article" />
   <DibBlogBody kind="post" slug={slug} body_html={data.body_html} />
 </Layout>

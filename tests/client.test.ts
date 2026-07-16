@@ -81,6 +81,17 @@ describe('RenderedApiClient', () => {
     expect(fn.mock.calls[0]?.[0]).toContain('/list/category/news%20%26%20updates');
   });
 
+  it('requests published public and private posts from /posts', async () => {
+    const fn = mockFetch({ success: true, code: 0, message: 'OK', data: { posts: [], pagination: {} } });
+    const client = new RenderedApiClient(baseOpts);
+    await client.fetchPosts(1, 100);
+
+    const url = String(fn.mock.calls[0]?.[0]);
+    expect(url).toContain('/blog/blog-1/posts');
+    expect(url).toContain('statuses=published');
+    expect(url).toContain('visibilities=public%2Cprivate');
+  });
+
   it('retries on 5xx and succeeds', async () => {
     const good = { success: true, code: 0, message: 'OK', data: { body_html: 'ok' } };
     let calls = 0;
