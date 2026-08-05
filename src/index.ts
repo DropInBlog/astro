@@ -167,6 +167,9 @@ export default function dropInBlog(userOptions: DropInBlogOptions = {}): AstroIn
           entrypoint: '@dropinblog/astro/routes/post.astro',
         });
 
+        for (const message of options.deprecations) {
+          logger.warn(`@dropinblog/astro: ${message}`);
+        }
         logger.info(`@dropinblog/astro: registered routes under ${base}`);
       },
       'astro:route:setup': ({ route }) => {

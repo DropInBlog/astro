@@ -37,7 +37,7 @@ export function isNotFound(error: unknown): boolean {
 }
 
 export class RenderedApiClient {
-  constructor(private readonly opts: Pick<VirtualConfig, 'apiBaseUrl' | 'apiToken' | 'blogId' | 'fields' | 'mode'>) {}
+  constructor(private readonly opts: Pick<VirtualConfig, 'apiBaseUrl' | 'apiKey' | 'blogId' | 'fields' | 'mode'>) {}
 
   private url(path: string, params: Record<string, string | number | undefined> = {}, fieldsOverride?: string): string {
     const url = new URL(`${this.opts.apiBaseUrl}/blog/${this.opts.blogId}/rendered${path}`);
@@ -70,7 +70,7 @@ export class RenderedApiClient {
       try {
         const res = await fetch(url, {
           headers: {
-            Authorization: `Bearer ${this.opts.apiToken}`,
+            Authorization: `Bearer ${this.opts.apiKey}`,
             'X-Dib-Package': `astro@${PACKAGE_VERSION}+${this.opts.mode}`,
           },
           signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),

@@ -1,6 +1,6 @@
 declare module 'virtual:dropinblog/config' {
   interface VirtualConfig {
-    apiToken: string;
+    apiKey: string;
     blogId: string;
     basePath: string;
     apiBaseUrl: string;

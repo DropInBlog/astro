@@ -4,7 +4,7 @@ import { PACKAGE_VERSION } from '../src/lib/version.js';
 
 const baseOpts = {
   apiBaseUrl: 'https://api.example.com/v2',
-  apiToken: 'test-token',
+  apiKey: 'test-token',
   blogId: 'blog-1',
   fields: ['head_data', 'body_html'],
   mode: 'ssr' as const,

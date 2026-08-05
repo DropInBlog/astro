@@ -58,7 +58,7 @@ export function virtualConfigPlugin(
         // Serialized at load time (after astro:config:done) so modeRef holds
         // the final resolved mode, including adapter detection.
         const config: VirtualConfig = {
-          apiToken: opts.apiToken,
+          apiKey: opts.apiKey,
           blogId: opts.blogId,
           basePath: opts.basePath,
           apiBaseUrl: opts.apiBaseUrl,

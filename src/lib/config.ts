@@ -2,7 +2,9 @@ import type { Mode } from './types.js';
 import { normalizeBasePath } from './slug.js';
 
 export interface DropInBlogOptions {
-  // Falls back to DROPINBLOG_API_TOKEN env var.
+  // Falls back to DROPINBLOG_API_KEY env var.
+  apiKey?: string;
+  /** @deprecated Renamed to apiKey. */
   apiToken?: string;
   // Falls back to DROPINBLOG_BLOG_ID env var.
   blogId?: string;
@@ -25,7 +27,7 @@ export interface DropInBlogOptions {
 }
 
 export interface ResolvedOptions {
-  apiToken: string;
+  apiKey: string;
   blogId: string;
   basePath: string;
   apiBaseUrl: string;
@@ -35,6 +37,9 @@ export interface ResolvedOptions {
   layout: string | undefined;
   feedLimit: number | undefined;
   feedType: 'rss' | 'atom' | undefined;
+  // Messages for legacy names still in use, logged by the integration once
+  // the Astro logger is available. Not part of the virtual config.
+  deprecations: string[];
 }
 
 const DEFAULT_FIELDS = ['head_data', 'body_html'];
@@ -42,12 +47,16 @@ const DEFAULT_API_BASE = 'https://api.dropinblog.com/v2';
 const DEFAULT_CACHE_TTL_MS = 5 * 60 * 1000;
 
 export function resolveOptions(opts: DropInBlogOptions = {}): ResolvedOptions {
-  const apiToken = opts.apiToken ?? process.env.DROPINBLOG_API_TOKEN;
+  // Options beat env vars; the current names beat the legacy ones they
+  // replaced. Blank values fall through so a half-finished rename in .env
+  // still picks up the old variable rather than failing the build.
+  const apiKey =
+    opts.apiKey || opts.apiToken || process.env.DROPINBLOG_API_KEY || process.env.DROPINBLOG_API_TOKEN;
   const blogId = opts.blogId ?? process.env.DROPINBLOG_BLOG_ID;
 
-  if (!apiToken) {
+  if (!apiKey) {
     throw new Error(
-      '@dropinblog/astro: apiToken is required. Pass it as an option or set DROPINBLOG_API_TOKEN.',
+      '@dropinblog/astro: apiKey is required. Pass it as an option or set DROPINBLOG_API_KEY.',
     );
   }
   if (!blogId) {
@@ -56,8 +65,18 @@ export function resolveOptions(opts: DropInBlogOptions = {}): ResolvedOptions {
     );
   }
 
+  // Warn only about the legacy source that actually supplied the value.
+  const deprecations: string[] = [];
+  if (!opts.apiKey) {
+    if (opts.apiToken) {
+      deprecations.push('the "apiToken" option is deprecated — rename it to "apiKey".');
+    } else if (!process.env.DROPINBLOG_API_KEY) {
+      deprecations.push('DROPINBLOG_API_TOKEN is deprecated — rename it to DROPINBLOG_API_KEY.');
+    }
+  }
+
   return {
-    apiToken,
+    apiKey,
     blogId,
     basePath: normalizeBasePath(opts.basePath ?? '/blog'),
     apiBaseUrl: opts.apiBaseUrl ?? DEFAULT_API_BASE,
@@ -67,5 +86,6 @@ export function resolveOptions(opts: DropInBlogOptions = {}): ResolvedOptions {
     layout: opts.layout,
     feedLimit: opts.feedLimit,
     feedType: opts.feedType,
+    deprecations,
   };
 }

@@ -82,7 +82,7 @@ export interface PostsResponse {
 }
 
 export interface VirtualConfig {
-  apiToken: string;
+  apiKey: string;
   blogId: string;
   basePath: string;
   apiBaseUrl: string;

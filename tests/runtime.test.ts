@@ -34,7 +34,7 @@ afterEach(() => {
 function makeConfig(mode: 'ssg' | 'ssr' = 'ssg'): VirtualConfig {
   blogCounter += 1;
   return {
-    apiToken: 'token',
+    apiKey: 'key',
     blogId: `blog-${blogCounter}`,
     basePath: '/blog',
     apiBaseUrl: 'https://api.example.com/v2',

@@ -26,10 +26,10 @@ Create a `.env` file in your Astro project. These are read server-side at build 
 
 ```env
 DROPINBLOG_BLOG_ID=your_dropinblog_blog_id
-DROPINBLOG_API_TOKEN=your_dropinblog_api_token
+DROPINBLOG_API_KEY=your_dropinblog_api_key
 ```
 
-> Use your **public** API token. It is read-only and safe in build environments.
+> Use your **public** API key. It is read-only and safe in build environments.
 
 ### 2. Add the Integration
 
@@ -98,7 +98,7 @@ Without `<slot name="head" />`, Astro silently drops the head content and meta t
 
 | Option | Default | Description |
 |--------|---------|-------------|
-| `apiToken` | `DROPINBLOG_API_TOKEN` env | DropInBlog public API token |
+| `apiKey` | `DROPINBLOG_API_KEY` env | DropInBlog public API key |
 | `blogId` | `DROPINBLOG_BLOG_ID` env | Your blog ID |
 | `basePath` | `'/blog'` | URL prefix for all blog routes |
 | `mode` | `'auto'` | `'auto'`, `'ssg'`, `'ssr'`, or `'island'` |
