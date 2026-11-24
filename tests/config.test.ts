@@ -1,3 +1,6 @@
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { resolveOptions } from '../src/lib/config.js';
 
@@ -45,6 +48,30 @@ describe('resolveOptions', () => {
     const opts = resolveOptions({ apiKey: 'explicit', blogId: 'explicit-blog' });
     expect(opts.apiKey).toBe('explicit');
     expect(opts.blogId).toBe('explicit-blog');
+  });
+
+  // astro.config.mjs runs before Astro copies .env into process.env, so the
+  // README's zero-option setup depends on this.
+  it('reads .env from the project root, with process.env taking priority', () => {
+    const projectRoot = mkdtempSync(join(tmpdir(), 'dib-env-'));
+    writeFileSync(
+      join(projectRoot, '.env'),
+      'DROPINBLOG_API_KEY=dotenv-key\nDROPINBLOG_BLOG_ID=dotenv-blog\n',
+    );
+    const originalCwd = process.cwd();
+    process.chdir(projectRoot);
+    try {
+      delete process.env.DROPINBLOG_API_KEY;
+      delete process.env.DROPINBLOG_API_TOKEN;
+      delete process.env.DROPINBLOG_BLOG_ID;
+      expect(resolveOptions({})).toMatchObject({ apiKey: 'dotenv-key', blogId: 'dotenv-blog' });
+
+      process.env.DROPINBLOG_BLOG_ID = 'shell-blog';
+      expect(resolveOptions({})).toMatchObject({ apiKey: 'dotenv-key', blogId: 'shell-blog' });
+    } finally {
+      process.chdir(originalCwd);
+      rmSync(projectRoot, { recursive: true, force: true });
+    }
   });
 
   it('throws when apiKey is missing', () => {
