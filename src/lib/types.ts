@@ -41,7 +41,8 @@ export interface FeedResponse {
 
 export interface IndexEntry {
   slug: string;
-  updated_at: string;
+  // Changes whenever the post's rendered page does; keys its build cache.
+  version: string;
   visibility?: string;
 }
 
@@ -63,6 +64,8 @@ export interface PostsApiPost {
   publishedAt?: string;
   updatedAt?: string;
   modifiedAt?: string;
+  // Set on every post when blog-wide settings change.
+  cachedAt?: string | null;
   categories?: Array<{ slug: string }>;
   author?: { slug: string } | null;
 }

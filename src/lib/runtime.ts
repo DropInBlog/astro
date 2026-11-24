@@ -1,6 +1,6 @@
 import { getOrFetch } from './cache.js';
 import { isNotFound, RenderedApiClient } from './client.js';
-import type { IndexEntry, IndexResponse, RenderedResponse, VirtualConfig } from './types.js';
+import type { IndexEntry, IndexResponse, PostsApiPost, RenderedResponse, VirtualConfig } from './types.js';
 
 export { DropInBlogApiError, isNotFound } from './client.js';
 
@@ -83,6 +83,15 @@ function isPublic(p: { visibility?: string }): boolean {
   return !p.visibility || p.visibility.toLowerCase() === 'public';
 }
 
+// A post's rendered page changes when the post is edited (updatedAt) and when
+// blog-wide settings change, such as the blog URL, SEO or layout. DropInBlog
+// stamps cachedAt on every post for the second, so the build cache keys on
+// both. APIs that don't send cachedAt keep the plain updatedAt key.
+function postVersion(p: PostsApiPost): string {
+  const updated = p.updatedAt ?? p.modifiedAt ?? p.publishedAt ?? '';
+  return p.cachedAt ? `${updated}|${p.cachedAt}` : updated;
+}
+
 // Build the SSG slug index by paginating /posts. Returns null if the call
 // fails so callers can fall back to TTL caching with no static paths.
 async function buildIndex(client: RenderedApiClient): Promise<IndexResponse | null> {
@@ -105,7 +114,7 @@ async function buildIndex(client: RenderedApiClient): Promise<IndexResponse | nu
         if (!isPublishedVisible(p) || !p.slug) continue;
         entries.push({
           slug: p.slug,
-          updated_at: p.updatedAt ?? p.modifiedAt ?? p.publishedAt ?? '',
+          version: postVersion(p),
           visibility: p.visibility,
         });
         // Rendered category/author lists exclude private posts, so only
@@ -281,7 +290,7 @@ export async function postStaticPaths(config: VirtualConfig): Promise<PostPath[]
   return index.entries.map((entry: IndexEntry) => ({
     params: { slug: entry.slug },
     props: {
-      cacheKey: entry.updated_at,
+      cacheKey: entry.version,
       // Private posts are reachable at their slug but should never be indexed.
       ...(isPublic(entry) ? {} : { noindex: true }),
     },
@@ -368,7 +377,7 @@ export async function authorPageStaticPaths(config: VirtualConfig): Promise<Slug
 function indexSignature(index: IndexResponse): string {
   let hash = 5381;
   for (const entry of index.entries) {
-    const piece = `${entry.slug}:${entry.updated_at};`;
+    const piece = `${entry.slug}:${entry.version};`;
     for (let i = 0; i < piece.length; i += 1) {
       hash = (hash * 33) ^ piece.charCodeAt(i);
     }

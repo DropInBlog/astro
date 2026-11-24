@@ -9,6 +9,8 @@ import {
   categoryStaticPaths,
   indexCacheKey,
   listStaticPaths,
+  loadList,
+  loadPost,
   postStaticPaths,
 } from '../src/lib/runtime.js';
 import type { VirtualConfig } from '../src/lib/types.js';
@@ -259,5 +261,61 @@ describe('static path derivation', () => {
     // fallback; production builds throw instead.
     const paths = await postStaticPaths(makeConfig());
     expect(paths).toEqual([]);
+  });
+});
+
+describe('build cache', () => {
+  // A blog-wide change (URL, SEO, layout) re-renders every post without
+  // touching updatedAt; DropInBlog signals it by bumping cachedAt.
+  function stubBlog(state: { cachedAt?: string; canonical: string }) {
+    const body = (data: unknown) => {
+      const json = { success: true, code: 0, message: 'OK', data };
+      return { ok: true, status: 200, json: async () => json, text: async () => JSON.stringify(json) };
+    };
+    vi.stubGlobal('fetch', vi.fn(async (input: string | URL) => {
+      const url = new URL(String(input));
+      if (url.pathname.endsWith('/posts')) {
+        const post = { slug: 'hello', status: 'published', visibility: 'public', updatedAt: '2026-01-01T00:00:00+00:00', cachedAt: state.cachedAt };
+        return body({
+          posts: [post],
+          pagination: { total: 1, per_page: 10, current_page: 1, last_page: 1, previous_page_url: null, next_page_url: null },
+        });
+      }
+      if (url.pathname.endsWith('/rendered/post/hello') || url.pathname.endsWith('/rendered/list')) {
+        return body({ body_html: '<p>hello</p>', head_data: { canonical_url: state.canonical } });
+      }
+      throw new Error(`unexpected URL ${url}`);
+    }));
+  }
+
+  // Each build is a new process, so a fresh config per build skips the
+  // in-memory index memo while the shared cacheDir keeps the disk cache.
+  async function build(cacheDir: string) {
+    const config = { ...makeConfig(), cacheDir };
+    const [path] = await postStaticPaths(config);
+    const post = await loadPost(config, 'hello', path!.props.cacheKey);
+    const list = await loadList(config, 1, await indexCacheKey(config));
+    return { post: post.head_data, list: list.head_data };
+  }
+
+  it('refetches posts and lists after a blog-wide change bumps cachedAt', async () => {
+    const cacheDir = join(baseCacheDir, 'blog-wide-change');
+    stubBlog({ cachedAt: '2026-01-05T00:00:00+00:00', canonical: 'https://old.test/blog/hello' });
+    expect((await build(cacheDir)).post).toEqual({ canonical_url: 'https://old.test/blog/hello' });
+
+    stubBlog({ cachedAt: '2026-01-06T00:00:00+00:00', canonical: 'https://new.test/blog/hello' });
+    expect(await build(cacheDir)).toEqual({
+      post: { canonical_url: 'https://new.test/blog/hello' },
+      list: { canonical_url: 'https://new.test/blog/hello' },
+    });
+  });
+
+  it('keeps serving the cache while nothing changed', async () => {
+    const cacheDir = join(baseCacheDir, 'unchanged');
+    stubBlog({ cachedAt: '2026-01-05T00:00:00+00:00', canonical: 'https://cached.test/blog/hello' });
+    await build(cacheDir);
+
+    stubBlog({ cachedAt: '2026-01-05T00:00:00+00:00', canonical: 'https://refetched.test/blog/hello' });
+    expect((await build(cacheDir)).post).toEqual({ canonical_url: 'https://cached.test/blog/hello' });
   });
 });
