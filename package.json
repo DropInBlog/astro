@@ -1,7 +1,7 @@
 {
   "name": "@dropinblog/astro",
-  "version": "2.2.2",
-  "description": "SEO-first blogging for Astro: server-rendered posts, meta tags, sitemap, and RSS feeds",
+  "version": "2.2.3",
+  "description": "Blog CMS for Astro: SEO-first, server-rendered posts with meta tags, sitemap, and RSS feeds",
   "homepage": "https://github.com/DropInBlog/astro#readme",
   "bugs": {
     "url": "https://github.com/DropInBlog/astro/issues"
@@ -17,6 +17,7 @@
     "dropinblog",
     "blog",
     "cms",
+    "blog-cms",
     "seo",
     "performance"
   ],
